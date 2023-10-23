@@ -36,11 +36,11 @@ function WelcomeSection() {
           <WelcomeContent>
             <WelcomeText>
               <h1>
-                Welcome to <span>ICONIZ</span> !
+                Welcome to <span>Blue Store</span> !
               </h1>
               <CaptionContainer>
                 <h5>
-                  The 2021 Best Online Retail Store with over <span>2B</span>{" "}
+                  The 2023 Best Online Retail Store with over <span>2B</span>{" "}
                   users in the world.
                 </h5>
                 <box-icon
