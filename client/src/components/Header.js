@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import * as mobilenet from "@tensorflow-models/mobilenet";
 import "boxicons";
-import { Link, useHistory, useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useStateValue } from "../StateProvider";
 
 const SpeechRecognition =
@@ -14,10 +14,9 @@ mic.interimResults = true;
 mic.lang = "en-US";
 
 function Header({ search }) {
-  const [{ basket, user }, dispatch] = useStateValue();
+  const [{ basket }, dispatch] = useStateValue(); // Remove 'user' as it's not used in this component
   const [input, setInput] = useState("");
   const [visible, setVisible] = useState(false);
-  const history = useNavigate();
 
   const [isModelLoading, setIsModelLoading] = useState(false);
   const [model, setModel] = useState(null);
@@ -31,6 +30,38 @@ function Header({ search }) {
 
   const [isListening, setIsListening] = useState(false);
   const [note, setNote] = useState(null);
+
+  const navigate = useNavigate();
+
+  const handleListen = () => {
+    if (isListening) {
+      mic.start();
+      mic.onend = () => {
+        mic.start();
+      };
+    } else {
+      mic.stop();
+      mic.onend = () => {
+        console.log("Stopped Mic on Click");
+      };
+    }
+
+    mic.onstart = () => {
+      console.log("Mics on");
+    };
+
+    mic.onresult = (event) => {
+      const transcript = Array.from(event.results)
+        .map((result) => result[0])
+        .map((result) => result.transcript)
+        .join("");
+      setNote(transcript);
+      navigate("/products/all");
+    };
+    mic.onerror = (event) => {
+      console.log(event.error);
+    };
+  };
 
   useEffect(() => {
     loadModel();
@@ -58,7 +89,7 @@ function Header({ search }) {
     setInput(event.target.value);
     setBoxDisplay(true);
     if (input.length >= 0) {
-      history.push("/products/all");
+      navigate("/products/all");
     }
     if (
       ((event.target.value.substring(0, 8) === "https://" ||
@@ -99,7 +130,7 @@ function Header({ search }) {
       const url = URL.createObjectURL(files[0]);
       setImageURL(url);
       setInput("");
-      history.push("/products/all");
+      navigate("/products/all");
     } else {
       setImageURL(null);
     }
@@ -120,38 +151,6 @@ function Header({ search }) {
       const results = await model.classify(imageRef.current);
       setResults(results);
     } catch (error) {}
-  };
-
-  const handleListen = () => {
-    if (isListening) {
-      mic.start();
-      mic.onend = () => {
-        // console.log("Continue");
-        mic.start();
-      };
-    } else {
-      mic.stop();
-      mic.onend = () => {
-        // console.log("Stopped Mic on Click");
-      };
-    }
-
-    mic.onstart = () => {
-      console.log("Mics on");
-    };
-
-    mic.onresult = (event) => {
-      const transcript = Array.from(event.results)
-        .map((result) => result[0])
-        .map((result) => result.transcript)
-        .join("");
-      // console.log(transcript);
-      setNote(transcript);
-      history.push("/products/all");
-      mic.onerror = (event) => {
-        console.log(event.error);
-      };
-    };
   };
 
   return (
@@ -186,13 +185,6 @@ function Header({ search }) {
                 animation="tada-hover"
               ></box-icon>
             </Cross>
-            {/* <Paste>
-              <box-icon
-                name="paste"
-                color="#5469d4"
-                animation="tada-hover"
-              ></box-icon>
-            </Paste> */}
             <input
               type="file"
               accept="image/*"
@@ -309,7 +301,7 @@ function Header({ search }) {
                     })}
                   </Results>
                 )}
-                {identifyBtn && results.length == 0 && <span>No results</span>}
+                {identifyBtn && results.length === 0 && <span>No results</span>}
               </ImageButtonContainer>
             )}
           </Form>
@@ -347,6 +339,8 @@ function Header({ search }) {
 }
 
 export default Header;
+
+
 
 const BigContainer = styled.div`
   width: 100%;
